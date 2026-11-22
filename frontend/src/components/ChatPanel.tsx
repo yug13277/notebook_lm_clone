@@ -12,6 +12,7 @@ import type {
 import type { Document } from "../types/documents";
 import { CitationPanel } from "./CitationPanel";
 import { Markdown, type Annotation } from "./Markdown";
+import { BookOpen, Send, ThumbsUp, ThumbsDown } from "react-feather";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -331,9 +332,13 @@ function CitationMarker({
 export function ChatPanel({
   notebookId,
   documents,
+  initialQuery = "",
+  onInitialQueryConsumed,
 }: {
   notebookId: string;
   documents: Document[];
+  initialQuery?: string;
+  onInitialQueryConsumed?: () => void;
 }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "owner" || user?.role === "admin";
@@ -341,6 +346,12 @@ export function ChatPanel({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [query, setQuery] = useState("");
+  useEffect(() => {
+    if (initialQuery) {
+      setQuery(initialQuery);
+      onInitialQueryConsumed?.();
+    }
+  }, [initialQuery]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeCitation, setActiveCitation] = useState<ResolvedCitation | null>(null);
   const [openTraceIndex, setOpenTraceIndex] = useState<number | null>(null);
@@ -508,23 +519,25 @@ export function ChatPanel({
       {/* Chat area */}
       <div className="flex flex-col flex-1 min-h-0">
         {/* Messages */}
-        <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-5">
+        <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-8 py-8 space-y-7 bg-panel">
           {messages.length === 0 && !isLoadingHistory && (
-            <div className="text-center mt-12 max-w-md mx-auto space-y-4">
-              <p className="text-muted text-sm">
+            <div className="text-center min-h-full max-w-lg mx-auto flex flex-col items-center justify-center pb-12">
+              <span className="flex h-12 w-12 items-center justify-center rounded-[16px] border border-border bg-surface text-muted mb-5"><BookOpen size={21} strokeWidth={1.6} aria-hidden="true" /></span>
+              <h2 className="text-base font-semibold tracking-tight">{hasDocuments ? "Ask about this notebook" : "Add a source to begin"}</h2>
+              <p className="mt-2 text-muted text-sm max-w-sm leading-relaxed">
                 {hasDocuments
                   ? "Ask a question about the documents in this notebook."
-                  : "This notebook has no documents yet. Attach one from the panel on the left, then come back and ask a question."}
+                  : "This notebook has no documents yet. Attach one in Sources, then ask a question."}
               </p>
               {hasDocuments && (
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
                   {STARTER_QUESTIONS.map((q) => (
                     <button
                       key={q}
                       type="button"
                       onClick={() => submitQuery(q)}
                       disabled={isStreaming}
-                      className="text-xs border border-border rounded-full px-3 py-1.5 text-muted hover:border-accent hover:text-accent transition disabled:opacity-50"
+                      className="button-press text-sm bg-surface border border-border rounded-full px-4 py-2.5 text-muted hover:border-accent hover:text-accent transition disabled:opacity-50"
                     >
                       {q}
                     </button>
@@ -542,7 +555,7 @@ export function ChatPanel({
             return (
               <div
                 key={i}
-                className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                className={`flex flex-col max-w-3xl mx-auto w-full ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 {isFinalAssistant && msg.weakEvidence && (
                   // Reranker-score confidence gate indicator — StatusBadge's warning-pill
@@ -553,10 +566,10 @@ export function ChatPanel({
                   </span>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-3 text-sm ${
+                  className={`max-w-[88%] rounded-[20px] px-5 py-4 text-sm leading-7 ${
                     msg.role === "user"
-                      ? "bg-accent text-white"
-                      : "bg-surface border border-border text-text"
+                      ? "bg-primary text-white rounded-br-md shadow-[0_4px_14px_rgb(0_113_227_/_16%)]"
+                      : "bg-surface border border-border text-text rounded-bl-md shadow-[0_8px_26px_rgb(0_0_0_/_12%)]"
                   }`}
                 >
                   {msg.role === "assistant" && msg.content === "" && isStreaming ? (
@@ -602,7 +615,7 @@ export function ChatPanel({
                           : "grayscale opacity-60 hover:opacity-100 hover:grayscale-0"
                       }`}
                     >
-                      👍
+                      <ThumbsUp size={15} aria-hidden="true" />
                     </button>
                     <button
                       type="button"
@@ -615,7 +628,7 @@ export function ChatPanel({
                           : "grayscale opacity-60 hover:opacity-100 hover:grayscale-0"
                       }`}
                     >
-                      👎
+                      <ThumbsDown size={15} aria-hidden="true" />
                     </button>
                     {canDebug && (
                       <>
@@ -651,7 +664,7 @@ export function ChatPanel({
         {/* Input */}
         <form
           onSubmit={handleSubmit}
-          className="shrink-0 border-t border-border p-4 flex gap-3"
+          className="shrink-0 border-t border-border px-5 sm:px-8 py-4 flex gap-3 bg-panel"
         >
           <input
             value={query}
@@ -662,14 +675,14 @@ export function ChatPanel({
                 ? "Ask a question…"
                 : "Attach a document to this notebook before asking a question"
             }
-            className="flex-1 bg-bg border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent disabled:opacity-50"
+            className="flex-1 bg-background border border-border rounded-full px-5 py-3 text-sm focus:outline-none focus:border-accent disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={isStreaming || !query.trim() || !hasDocuments}
-            className="text-sm bg-accent text-white rounded-md px-4 py-2 hover:opacity-90 disabled:opacity-50"
+            className="button-press text-sm bg-primary text-white rounded-full px-5 py-2 hover:brightness-110 disabled:opacity-50 flex items-center gap-2 shadow-sm"
           >
-            {isStreaming ? "…" : "Ask"}
+            {isStreaming ? "…" : <><span>Ask</span><Send size={15} aria-hidden="true" /></>}
           </button>
         </form>
       </div>

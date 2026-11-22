@@ -131,7 +131,7 @@ export function UsersPage() {
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <main className="p-6 max-w-3xl mx-auto w-full">
+      <main className="p-6 sm:p-10 max-w-5xl mx-auto w-full">
         <div className="mb-4">
           {editingOrgName ? (
             <div className="flex items-center gap-2">
@@ -243,7 +243,7 @@ export function UsersPage() {
           )}
         </div>
 
-        <h1 className="text-lg font-semibold mb-4">Team members</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mb-8">Team members</h1>
 
         {isAdmin && (
           <form

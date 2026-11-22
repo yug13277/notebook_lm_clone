@@ -61,6 +61,79 @@ async def _signup(client: AsyncClient, email: str, org_name: str) -> dict:
     return resp.json()
 
 
+async def test_pdf_reader_and_personal_annotations_are_tenant_scoped(
+    client: AsyncClient, session_factory, store: _InMemoryObjectStore
+) -> None:
+    first = await _signup(client, "reader-a@test.com", "Reader A")
+    second = await _signup(client, "reader-b@test.com", "Reader B")
+    a = {"Authorization": f"Bearer {first['access_token']}"}
+    b = {"Authorization": f"Bearer {second['access_token']}"}
+    org_id = uuid.UUID((await client.get("/auth/me", headers=a)).json()["org_id"])
+    document_id = uuid.uuid4()
+    key = f"org/{org_id}/doc/{document_id}/source.pdf"
+    async with session_factory() as session, session.begin():
+        session.add(
+            Document(
+                id=document_id,
+                org_id=org_id,
+                title="Reader test",
+                storage_key=key,
+                mime_type="application/pdf",
+            )
+        )
+    await store.put(key, b"%PDF-1.4 test", "application/pdf")
+
+    path = f"/documents/{document_id}"
+    pdf = await client.get(f"{path}/file", headers=a)
+    assert pdf.status_code == 200
+    assert pdf.content == b"%PDF-1.4 test"
+    assert pdf.headers["cache-control"] == "private, no-store"
+    assert (await client.get(f"{path}/file", headers=b)).status_code == 404
+
+    body = {
+        "page": 1,
+        "quote": "Selected text",
+        "note": "My note",
+        "rectangles": [{"x": 0.2, "y": 0.3, "width": 0.3, "height": 0.02}],
+    }
+    created = await client.post(f"{path}/annotations", headers=a, json=body)
+    assert created.status_code == 201
+    annotation_id = created.json()["id"]
+    assert (await client.get(f"{path}/annotations", headers=a)).json()[0]["note"] == "My note"
+    assert (await client.get(f"{path}/annotations", headers=b)).status_code == 404
+    assert (
+        await client.delete(f"{path}/annotations/{annotation_id}", headers=b)
+    ).status_code == 404
+    assert (
+        await client.delete(f"{path}/annotations/{annotation_id}", headers=a)
+    ).status_code == 204
+    assert (await client.get(f"{path}/annotations", headers=a)).json() == []
+
+
+async def test_web_research_is_authenticated_and_separate_from_pdf_chat(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.config.settings import settings
+    from app.services import web_research
+
+    async def fake_search(_query: str) -> list[web_research.WebSource]:
+        return [web_research.WebSource("Research", "https://example.com", "A public result")]
+
+    monkeypatch.setattr(web_research, "search_web", fake_search)
+    monkeypatch.setattr(settings, "LLM_MODE", "fake")
+    assert (
+        await client.post("/web-research/ask", json={"query": "What is this?"})
+    ).status_code == 401
+    token = await _signup(client, "web-user@test.com", "Web org")
+    headers = {"Authorization": f"Bearer {token['access_token']}"}
+    response = await client.post(
+        "/web-research/ask", headers=headers, json={"query": "What is this?"}
+    )
+    assert response.status_code == 200
+    assert response.json()["generated"] is False
+    assert response.json()["sources"][0]["url"] == "https://example.com"
+
+
 async def test_create_nested_folders_and_list(client: AsyncClient) -> None:
     tokens = await _signup(client, "docs-owner1@test.com", "Acme")
     headers = {"Authorization": f"Bearer {tokens['access_token']}"}

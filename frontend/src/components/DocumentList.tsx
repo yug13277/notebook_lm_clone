@@ -5,6 +5,9 @@ import { useDialog } from "../hooks/useDialog";
 import { ApiError } from "../types/auth";
 import type { Document, Folder } from "../types/documents";
 import { StatusBadge } from "./StatusBadge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table";
+import { Button } from "./ui/button";
+import { FileText } from "react-feather";
 import { DocumentDetailModal, formatBytes, formatDateShort } from "./DocumentDetailModal";
 import { DRAG_MIME, type DragPayload } from "./FolderTree";
 
@@ -125,17 +128,20 @@ export function DocumentList({ currentFolderId }: { currentFolderId: string | nu
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <main className="p-4 sm:p-6 max-w-5xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-lg font-semibold">Documents</h1>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadMutation.isPending}
-            className="text-sm bg-accent text-white rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-50"
-          >
-            {uploadMutation.isPending ? "Uploading…" : "Upload PDF"}
-          </button>
+      <main className="p-6 sm:p-10 max-w-6xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight">Documents</h1>
+          {documentsQuery.data && documentsQuery.data.length > 0 && (
+            <Button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadMutation.isPending}
+              size="sm"
+              className="button-press text-sm font-medium"
+            >
+              {uploadMutation.isPending ? "Uploading…" : "Upload PDF"}
+            </Button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
@@ -182,7 +188,16 @@ export function DocumentList({ currentFolderId }: { currentFolderId: string | nu
         )}
 
         {documentsQuery.data && documentsQuery.data.length === 0 && (
-          <p className="text-muted text-sm">No documents here yet. Upload a PDF to get started.</p>
+          <div className="min-h-64 rounded-[18px] border border-dashed border-border bg-panel flex flex-col items-center justify-center px-6 py-10 text-center">
+            <span className="w-12 h-12 rounded-[16px] bg-accent-soft text-accent flex items-center justify-center mb-4">
+              <FileText size={22} strokeWidth={1.7} aria-hidden="true" />
+            </span>
+            <h2 className="text-base font-semibold tracking-tight">No documents here yet</h2>
+            <p className="mt-1 text-sm text-muted max-w-sm">Upload a PDF to make it available for your notebooks and search.</p>
+            <Button type="button" size="sm" className="button-press mt-5" onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
+              {uploadMutation.isPending ? "Uploading…" : "Upload PDF"}
+            </Button>
+          </div>
         )}
 
         {documentsQuery.data && documentsQuery.data.length > 0 && (
@@ -190,27 +205,27 @@ export function DocumentList({ currentFolderId }: { currentFolderId: string | nu
           // container it scrolls instead of clipping the move/delete controls. Low-value
           // columns collapse at narrower breakpoints; on phones the status badge moves
           // under the title so title, status, move and delete all stay reachable.
-          <div className="bg-surface border border-border rounded-lg overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted border-b border-border">
-                  <th className="px-3 py-2 font-medium">Title</th>
-                  <th className="px-3 py-2 font-medium hidden md:table-cell">Uploaded</th>
-                  <th className="px-3 py-2 font-medium hidden lg:table-cell">Size</th>
-                  <th className="px-3 py-2 font-medium hidden lg:table-cell">Pages</th>
-                  <th className="px-3 py-2 font-medium hidden sm:table-cell">Status</th>
-                  <th className="px-3 py-2 font-medium">
+          <div className="bg-surface border border-border rounded-[20px] overflow-x-auto shadow-[0_8px_30px_rgb(45_55_80_/_5%)]">
+            <Table className="w-full text-sm">
+              <TableHeader>
+                <TableRow className="text-left text-muted border-b border-border bg-background">
+                  <TableHead className="px-4 py-3 font-medium">Title</TableHead>
+                  <TableHead className="px-4 py-3 font-medium hidden md:table-cell">Uploaded</TableHead>
+                  <TableHead className="px-4 py-3 font-medium hidden lg:table-cell">Size</TableHead>
+                  <TableHead className="px-4 py-3 font-medium hidden lg:table-cell">Pages</TableHead>
+                  <TableHead className="px-4 py-3 font-medium hidden sm:table-cell">Status</TableHead>
+                  <TableHead className="px-4 py-3 font-medium">
                     <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {documentsQuery.data.map((doc) => {
                   const isDuplicate = duplicateDoc?.id === doc.id;
                   const errorText =
                     doc.status === "FAILED" && doc.error_detail ? doc.error_detail : null;
                   return (
-                    <tr
+                    <TableRow
                       key={doc.id}
                       ref={(el) => {
                         if (el) rowRefs.current.set(doc.id, el);
@@ -223,7 +238,7 @@ export function DocumentList({ currentFolderId }: { currentFolderId: string | nu
                         isDuplicate ? "outline outline-2 -outline-offset-2 outline-accent" : ""
                       }`}
                     >
-                      <td className="px-3 py-2 max-w-[11rem] sm:max-w-[16rem] lg:max-w-xs">
+                      <TableCell className="px-4 py-3 max-w-[11rem] sm:max-w-[16rem] lg:max-w-xs">
                         <div className="truncate" title={doc.title}>
                           {doc.title}
                         </div>
@@ -235,8 +250,8 @@ export function DocumentList({ currentFolderId }: { currentFolderId: string | nu
                             </div>
                           )}
                         </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap hidden md:table-cell">
+                      </TableCell>
+                      <TableCell className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
                         <div>{formatDateShort(doc.created_at)}</div>
                         <div
                           className="text-xs text-muted truncate max-w-[12rem]"
@@ -244,22 +259,22 @@ export function DocumentList({ currentFolderId }: { currentFolderId: string | nu
                         >
                           {doc.uploader_email ?? "—"}
                         </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-muted hidden lg:table-cell">
+                      </TableCell>
+                      <TableCell className="px-4 py-3 whitespace-nowrap text-muted hidden lg:table-cell">
                         {formatBytes(doc.byte_size)}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-muted hidden lg:table-cell">
+                      </TableCell>
+                      <TableCell className="px-4 py-3 whitespace-nowrap text-muted hidden lg:table-cell">
                         {doc.page_count ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 hidden sm:table-cell max-w-[14rem]">
+                      </TableCell>
+                      <TableCell className="px-4 py-3 hidden sm:table-cell max-w-[14rem]">
                         <StatusBadge status={doc.status} failedStage={doc.failed_stage} />
                         {errorText && (
                           <div className="text-muted text-xs truncate mt-0.5" title={errorText}>
                             {errorText}
                           </div>
                         )}
-                      </td>
-                      <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <select
                             aria-label={`Move ${doc.title} to folder`}
@@ -288,12 +303,12 @@ export function DocumentList({ currentFolderId }: { currentFolderId: string | nu
                             ×
                           </button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
 

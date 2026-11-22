@@ -7,7 +7,7 @@ export function DocumentsPage() {
 
   return (
     <div className="flex flex-col lg:flex-row flex-1 min-h-0">
-      <aside className="w-full max-h-48 border-b lg:max-h-none lg:w-56 lg:border-b-0 lg:border-r shrink-0 border-border overflow-y-auto py-3">
+      <aside className="w-full max-h-48 border-b lg:max-h-none lg:w-60 lg:border-b-0 lg:border-r shrink-0 border-border overflow-y-auto py-5 bg-background">
         <FolderTree currentFolderId={currentFolderId} onNavigate={setCurrentFolderId} />
       </aside>
       <DocumentList currentFolderId={currentFolderId} />

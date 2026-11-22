@@ -14,6 +14,7 @@ model modules and re-exported here alongside the ORM classes.
 from __future__ import annotations
 
 from app.config.db import Base
+from app.models.annotations import PdfAnnotation
 from app.models.auth import (
     InviteRequest,
     LoginAmbiguousResponse,
@@ -53,6 +54,7 @@ from app.models.retrieval import ContextBlock, RetrievalSearchRequest, Retrieval
 
 __all__ = [
     "Base",
+    "PdfAnnotation",
     "Organization",
     "User",
     "Document",

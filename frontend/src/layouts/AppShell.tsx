@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
+import { Menu, X } from "react-feather";
 
 // Per-route document titles for the static app pages. Notebook detail pages are
 // deliberately absent — NotebookPage sets its own title from the notebook name
@@ -35,23 +36,23 @@ export function AppShell() {
     // `overflow-y-auto` on its inner panes, so the sidebar, notebook header/tabs
     // and the chat input stay pinned. The Outlet wrapper is a scroll fallback for
     // any page that doesn't manage its own overflow.
-    <div className="flex h-dvh overflow-hidden">
+    <div className="flex h-dvh overflow-hidden bg-bg">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-        <div className="lg:hidden shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col lg:p-4">
+        <div className="lg:hidden shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border bg-panel backdrop-blur-xl">
           <button
             type="button"
             onClick={() => setIsSidebarOpen((open) => !open)}
             aria-expanded={isSidebarOpen}
             aria-controls="app-sidebar"
             aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-            className="text-xl leading-none text-muted hover:text-text transition p-1 rounded-md hover:bg-surface"
+            className="text-muted hover:text-text transition p-2 rounded-lg hover:bg-secondary"
           >
-            {isSidebarOpen ? "✕" : "☰"}
+            {isSidebarOpen ? <X size={19} aria-hidden="true" /> : <Menu size={19} aria-hidden="true" />}
           </button>
           <span className="font-semibold tracking-tight text-lg">Veratas</span>
         </div>
-        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto bg-panel lg:rounded-[22px] lg:border lg:border-border lg:shadow-[0_24px_70px_rgb(0_0_0_/_22%)]">
           <Outlet />
         </div>
       </div>

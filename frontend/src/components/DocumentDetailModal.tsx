@@ -1,7 +1,8 @@
-import { useId } from "react";
+import { lazy, Suspense, useId, useState } from "react";
 import type { Document } from "../types/documents";
 import { Modal } from "./Modal";
 import { StatusBadge } from "./StatusBadge";
+const PdfReader = lazy(() => import("./PdfReader").then(module => ({ default: module.PdfReader })));
 
 // Exported so DocumentList's table columns reuse the exact same formatting, and so
 // both are directly unit-testable without rendering a table or a modal.
@@ -50,9 +51,10 @@ export function DocumentDetailModal({
   onClose: () => void;
 }) {
   const titleId = useId();
+  const [readerOpen, setReaderOpen] = useState(false);
 
   return (
-    <Modal open={document !== null} onClose={onClose} titleId={titleId}>
+    <><Modal open={document !== null} onClose={onClose} titleId={titleId}>
       {document && (
         <>
           <div className="flex items-start justify-between gap-4">
@@ -95,6 +97,7 @@ export function DocumentDetailModal({
           )}
 
           <div className="flex justify-end pt-2">
+            <button type="button" onClick={() => setReaderOpen(true)} className="mr-auto text-sm rounded-lg bg-accent-soft text-accent px-3 py-1.5 hover:brightness-110">Open PDF</button>
             <button
               type="button"
               onClick={onClose}
@@ -105,6 +108,6 @@ export function DocumentDetailModal({
           </div>
         </>
       )}
-    </Modal>
+    </Modal>{readerOpen && document && <Suspense fallback={<p role="status">Opening PDF…</p>}><PdfReader document={document} onClose={() => setReaderOpen(false)} /></Suspense>}</>
   );
 }

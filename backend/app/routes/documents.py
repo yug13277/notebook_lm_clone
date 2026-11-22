@@ -30,6 +30,7 @@ router.post("/{document_id}/tags/{tag_id}", status_code=204)(controllers.documen
 router.delete("/{document_id}/tags/{tag_id}", status_code=204)(controllers.documents.untag_document)
 router.get("", response_model=list[DocumentOut])(controllers.documents.list_documents)
 router.post("/upload")(controllers.documents.upload_document)
+router.get("/{document_id}/file")(controllers.documents.get_document_file)
 router.delete("/{document_id}", status_code=204)(controllers.documents.delete_document)
 router.patch("/{document_id}/folder", response_model=DocumentOut)(
     controllers.documents.move_document

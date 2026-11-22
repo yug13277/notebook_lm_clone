@@ -42,7 +42,7 @@ describe("HomePage — welcome greeting", () => {
     mockUser({ name: "Uma Reviewer", email: "uxreview@company.com" });
     renderHomePage();
 
-    const heading = screen.getByRole("heading");
+    const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.textContent).toContain("Welcome,");
     expect(screen.getByText("Uma Reviewer")).toBeInTheDocument();
   });
@@ -68,7 +68,7 @@ describe("HomePage — welcome greeting", () => {
     });
     renderHomePage();
 
-    expect(screen.getByRole("heading").textContent).toContain("Welcome,");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Welcome,");
   });
 });
 

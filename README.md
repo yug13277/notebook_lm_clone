@@ -119,6 +119,22 @@ Open **http://localhost:5173** — sign up to create an organization (you become
 **owner**), or sign in. The Vite dev server proxies `/auth`, `/documents`, `/chat`,
 etc. to the backend at `127.0.0.1:8010` (see `frontend/vite.config.ts`).
 
+### PDF reading and Ask Web
+
+Open a PDF from the repository or a notebook's Sources list. Select text to Copy,
+Highlight, Add note, Ask PDF (when opened in a notebook), or Ask Web. Highlights
+and notes are saved for your account; the uploaded PDF stays unchanged. The
+notebook's **Ask Web** tab is separate from its PDF-only chat.
+
+Ask Web uses live public search results from the local SearXNG service started
+by `docker compose up -d`. Unrelated results are filtered out. To use a managed
+search API instead, set `BRAVE_SEARCH_API_KEY` in `backend/.env` and restart
+the API. A synthesized web answer also requires `LLM_MODE=real` plus a configured
+OpenAI-compatible model key. With the default fake model, the UI clearly labels
+the returned excerpts as source previews. See
+[`docs/pdf-annotations-web-research-plan.md`](docs/pdf-annotations-web-research-plan.md)
+for the detailed behavior and privacy boundaries.
+
 ### Frontend tests / build
 
 ```bash

@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config.logging import configure_logging
 from app.config.settings import settings
 from app.routes.access_roles import router as access_roles_router
+from app.routes.annotations import router as annotations_router
 from app.routes.auth import router as auth_router
 from app.routes.chat import router as chat_router
 from app.routes.documents import router as documents_router
@@ -20,6 +21,7 @@ from app.routes.evals import router as evals_router
 from app.routes.ingestion import router as ingestion_router
 from app.routes.notebooks import router as knowledge_router
 from app.routes.retrieval import router as retrieval_router
+from app.routes.web_research import router as web_research_router
 from app.utils.http import register_exception_handlers
 
 configure_logging()
@@ -38,6 +40,7 @@ app.add_middleware(
 register_exception_handlers(app)
 app.include_router(auth_router)
 app.include_router(documents_router)
+app.include_router(annotations_router)
 app.include_router(ingestion_router)
 app.include_router(knowledge_router)
 app.include_router(retrieval_router)
@@ -45,6 +48,7 @@ app.include_router(chat_router)
 app.include_router(access_roles_router)
 app.include_router(embed_router)
 app.include_router(evals_router)
+app.include_router(web_research_router)
 
 
 @app.get("/health")

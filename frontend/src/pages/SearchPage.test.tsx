@@ -365,7 +365,7 @@ describe("SearchPage", () => {
     );
     fireEvent.click(screen.getByRole("tab", { name: "Boolean" }));
     expect(screen.getByRole("tab", { name: "Boolean" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText(/Postings are merged in increasing-df order/)).toBeInTheDocument();
+    expect(screen.getByText(/Combine terms with AND, OR and NOT/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Notebook"), { target: { value: "nb-1" } });
     fireEvent.change(screen.getByLabelText("Query"), {
       target: { value: "hydrogen AND bond NOT covalent" },
@@ -402,7 +402,7 @@ describe("SearchPage", () => {
       expect(screen.getByRole("option", { name: "Chemistry" })).toBeInTheDocument(),
     );
     expect(screen.queryByRole("radiogroup", { name: "Scoring scheme" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: "Ranked (tf-idf / BM25)" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Keyword" }));
     fireEvent.click(screen.getByRole("radio", { name: "tf-idf (lnc.ltc)" }));
     fireEvent.click(screen.getByLabelText("Champion lists"));
     fireEvent.change(screen.getByLabelText("Notebook"), { target: { value: "nb-1" } });
@@ -429,7 +429,7 @@ describe("SearchPage", () => {
     vi.mocked(retrievalApi.sparseSearch)
       .mockResolvedValueOnce(sparseResponse(13, 10))
       .mockResolvedValueOnce(sparseResponse(13, 13));
-    await runSparse("Ranked (tf-idf / BM25)", "octet rule");
+    await runSparse("Keyword", "octet rule");
 
     await waitFor(() =>
       expect(screen.getByTestId("results-count")).toHaveTextContent(

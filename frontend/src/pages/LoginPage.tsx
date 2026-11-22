@@ -4,6 +4,7 @@ import { Link, Navigate } from "react-router-dom";
 import { ApiError } from "../types/auth";
 import { useAuth } from "../hooks/useAuth";
 import { clearSessionNotice, peekSessionNotice } from "../services/http";
+import { AuthFrame } from "../components/AuthFrame";
 
 export function LoginPage() {
   useDocumentTitle("Sign in");
@@ -51,10 +52,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-surface border border-border rounded-lg p-6 space-y-6">
+    <AuthFrame>
+      <div className="w-full bg-surface border border-border rounded-[24px] p-7 sm:p-9 space-y-7 shadow-[0_18px_50px_rgb(45_55_80_/_8%)]">
         <div>
-          <h1 className="text-xl font-semibold">Sign in to Veratas</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Sign in to Veratas</h1>
           <p className="text-sm text-muted mt-1">
             Source-grounded company knowledge base
           </p>
@@ -134,6 +135,6 @@ export function LoginPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </AuthFrame>
   );
 }

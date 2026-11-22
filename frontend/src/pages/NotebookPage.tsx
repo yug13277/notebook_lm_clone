@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { documentsApi } from "../services/documentsService";
@@ -13,6 +13,9 @@ import { ChatPanel } from "../components/ChatPanel";
 import { NotebookOverviewPanel } from "../components/NotebookOverviewPanel";
 import { ShareNotebookDialog } from "../components/ShareNotebookDialog";
 import { RenameDialog } from "../components/RenameDialog";
+const PdfReader = lazy(() => import("../components/PdfReader").then(module => ({ default: module.PdfReader })));
+import { WebResearchPanel } from "../components/WebResearchPanel";
+import { X } from "react-feather";
 
 export function NotebookPage() {
   const { notebookId } = useParams<{ notebookId: string }>();
@@ -22,7 +25,9 @@ export function NotebookPage() {
   const { user } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "overview">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "web" | "overview">("chat");
+  const [openDocument, setOpenDocument] = useState<Document | null>(null);
+  const [selectedPdfQuery, setSelectedPdfQuery] = useState("");
 
   const notebookQuery = useQuery({
     queryKey: ["notebooks", notebookId],
@@ -106,20 +111,20 @@ export function NotebookPage() {
   return (
     <div className="flex flex-col lg:flex-row flex-1 min-h-0">
       {/* Left: document membership panel */}
-      <aside className="w-full max-h-56 border-b lg:max-h-none lg:w-72 lg:border-b-0 lg:border-r shrink-0 border-border flex flex-col overflow-hidden">
-        <div className="shrink-0 px-4 py-3 border-b border-border">
+      <aside className="w-full max-h-56 border-b lg:max-h-none lg:w-[296px] lg:border-b-0 lg:border-r shrink-0 border-border bg-background flex flex-col overflow-hidden">
+        <div className="shrink-0 px-5 py-5 border-b border-border">
           <button
             type="button"
             onClick={() => navigate("/app/notebooks")}
-            className="text-xs text-muted hover:text-text transition mb-1"
+            className="text-xs font-medium text-accent hover:underline transition mb-3"
           >
             ← Notebooks
           </button>
           {notebookQuery.isLoading ? (
             <p className="text-sm text-muted">Loading…</p>
           ) : (
-            <div className="flex items-center justify-between gap-2">
-              <h1 className="text-sm font-semibold truncate" title={notebookQuery.data?.name}>
+            <div className="flex flex-col items-start gap-2">
+              <h1 className="text-lg font-semibold tracking-tight break-words w-full" title={notebookQuery.data?.name}>
                 {notebookQuery.data?.name ?? "Notebook"}
               </h1>
               {isOwner ? (
@@ -167,25 +172,26 @@ export function NotebookPage() {
 
         <div className="flex-1 overflow-y-auto">
           {/* Documents in this notebook */}
-          <div className="px-3 pt-3 pb-1">
-            <p className="text-xs text-muted uppercase tracking-wide mb-2">In this notebook</p>
+          <div className="px-4 pt-5 pb-2">
+            <div className="flex items-center justify-between mb-3"><h2 className="text-xs font-semibold text-muted">Sources</h2>{nbDocsQuery.data && <span className="text-[11px] text-muted">{nbDocsQuery.data.length}</span>}</div>
             {nbDocsQuery.isLoading && <p className="text-xs text-muted px-1">Loading…</p>}
             {nbDocsQuery.data && nbDocsQuery.data.length === 0 && (
-              <p className="text-xs text-muted px-1">
-                No documents yet. Add some from the repository below.
-              </p>
+              <div className="rounded-xl border border-border bg-surface p-3">
+                <p className="text-xs text-muted leading-relaxed">No documents yet. {addableDocs.length > 0 ? "Add one from the repository below." : "Upload a PDF to get started."}</p>
+                {allDocsQuery.data?.length === 0 && <Link to="/app/repository" className="mt-2 inline-block text-xs font-medium text-accent hover:underline">Go to Repository →</Link>}
+              </div>
             )}
             {nbDocsQuery.data && nbDocsQuery.data.length > 0 && (
               <div className="space-y-1">
                 {nbDocsQuery.data.map((doc: Document) => (
                   <div
                     key={doc.id}
-                    className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surface"
+                    className="group flex items-center gap-2 px-3 py-2.5 rounded-lg bg-surface border border-border hover:bg-elevated transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs truncate" title={doc.title}>
+                      <button type="button" onClick={() => setOpenDocument(doc)} className="text-left text-sm font-medium truncate max-w-full hover:text-accent" title={`Open ${doc.title}`}>
                         {doc.title}
-                      </p>
+                      </button>
                       <StatusBadge status={doc.status} failedStage={doc.failed_stage} />
                     </div>
                     {isOwner && (
@@ -194,9 +200,9 @@ export function NotebookPage() {
                         aria-label={`Remove ${doc.title} from notebook`}
                         onClick={() => detachMutation.mutate(doc.id)}
                         disabled={detachMutation.isPending}
-                        className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 text-muted hover:text-danger transition text-sm px-1"
+                        className="button-press text-muted hover:text-danger hover:bg-elevated rounded-lg p-1.5"
                       >
-                        ×
+                        <X size={14} aria-hidden="true" />
                       </button>
                     )}
                   </div>
@@ -207,18 +213,18 @@ export function NotebookPage() {
 
           {/* Add from repository */}
           {isOwner && addableDocs.length > 0 && (
-            <div className="px-3 pt-3 pb-3 border-t border-border mt-2">
-              <p className="text-xs text-muted uppercase tracking-wide mb-2">
+            <div className="px-4 pt-5 pb-4 border-t border-border mt-4">
+              <p className="text-xs font-semibold text-muted mb-3">
                 Add from repository
               </p>
               <div className="space-y-1">
                 {addableDocs.map((doc: Document) => (
                   <div
                     key={doc.id}
-                    className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surface"
+                    className="group flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-elevated transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs truncate" title={doc.title}>
+                      <p className="text-sm truncate" title={doc.title}>
                         {doc.title}
                       </p>
                       <StatusBadge status={doc.status} failedStage={doc.failed_stage} />
@@ -228,7 +234,7 @@ export function NotebookPage() {
                       aria-label={`Add ${doc.title} to notebook`}
                       onClick={() => attachMutation.mutate(doc.id)}
                       disabled={attachMutation.isPending || doc.status !== "READY"}
-                      className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 text-accent text-xs hover:underline transition px-1 disabled:opacity-30"
+                      className="button-press text-accent text-xs font-medium hover:underline rounded-lg px-1.5 py-1 disabled:opacity-30"
                     >
                       + Add
                     </button>
@@ -242,25 +248,38 @@ export function NotebookPage() {
 
       {/* Right: chat / overview tabs */}
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="shrink-0 border-b border-border flex gap-1 px-4">
+        <div className="shrink-0 border-b border-border flex items-center gap-1 px-5 py-3 bg-panel" role="tablist" aria-label="Notebook view">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "web"}
+            onClick={() => setActiveTab("web")}
+            className={`text-sm font-medium px-4 py-2 rounded-full transition ${
+              activeTab === "web" ? "bg-accent-soft text-accent" : "text-muted hover:text-text hover:bg-secondary"
+            }`}
+          >Ask Web</button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "chat"}
             onClick={() => setActiveTab("chat")}
-            className={`text-sm px-3 py-2 border-b-2 transition ${
+            className={`text-sm font-medium px-4 py-2 rounded-full transition ${
               activeTab === "chat"
-                ? "border-accent text-text"
-                : "border-transparent text-muted hover:text-text"
+                ? "bg-accent-soft text-accent"
+                : "text-muted hover:text-text hover:bg-secondary"
             }`}
           >
             Chat
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "overview"}
             onClick={() => setActiveTab("overview")}
-            className={`text-sm px-3 py-2 border-b-2 transition ${
+            className={`text-sm font-medium px-4 py-2 rounded-full transition ${
               activeTab === "overview"
-                ? "border-accent text-text"
-                : "border-transparent text-muted hover:text-text"
+                ? "bg-accent-soft text-accent"
+                : "text-muted hover:text-text hover:bg-secondary"
             }`}
           >
             Overview
@@ -271,11 +290,16 @@ export function NotebookPage() {
         {!notebookQuery.data ? (
           <p className="p-6 text-sm text-muted">Loading…</p>
         ) : activeTab === "chat" ? (
-          <ChatPanel notebookId={notebookId} documents={nbDocsQuery.data ?? []} />
+          <ChatPanel notebookId={notebookId} documents={nbDocsQuery.data ?? []}
+            initialQuery={selectedPdfQuery} onInitialQueryConsumed={() => setSelectedPdfQuery("")} />
+        ) : activeTab === "web" ? (
+          <WebResearchPanel />
         ) : (
           <NotebookOverviewPanel notebookId={notebookId} documents={nbDocsQuery.data ?? []} />
         )}
       </div>
+      {openDocument && <Suspense fallback={<p role="status">Opening PDF…</p>}><PdfReader document={openDocument} onClose={() => setOpenDocument(null)}
+        onAskPdf={(query) => { setSelectedPdfQuery(query); setActiveTab("chat"); setOpenDocument(null); }} /></Suspense>}
     </div>
   );
 }

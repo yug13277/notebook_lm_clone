@@ -11,12 +11,12 @@ const LABEL: Record<DocumentStatus, string> = {
 
 // uitokens.md: warning = in-progress stages, success = ready, danger = failed.
 const COLOR: Record<DocumentStatus, string> = {
-  UPLOADED: "text-warning border-warning",
-  PARSING: "text-warning border-warning",
-  STRUCTURING: "text-warning border-warning",
-  EMBEDDING: "text-warning border-warning",
-  READY: "text-success border-success",
-  FAILED: "text-danger border-danger",
+  UPLOADED: "text-warning bg-[#3c2b18] border-transparent",
+  PARSING: "text-warning bg-[#3c2b18] border-transparent",
+  STRUCTURING: "text-warning bg-[#3c2b18] border-transparent",
+  EMBEDDING: "text-warning bg-[#3c2b18] border-transparent",
+  READY: "text-success bg-[#173b2c] border-transparent",
+  FAILED: "text-danger bg-[#42252c] border-transparent",
 };
 
 // failed_stage is its own free-text field on the wire (not a DocumentStatus value) —
@@ -47,7 +47,7 @@ export function StatusBadge({
   const inProgress = isNonTerminal(status);
   return (
     <span
-      className={`inline-flex items-center gap-1 text-xs border rounded-sm px-2 py-0.5 ${COLOR[status]}`}
+      className={`inline-flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-1 ${COLOR[status]}`}
     >
       {inProgress ? (
         <span

@@ -71,7 +71,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/35 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
@@ -81,7 +81,7 @@ export function Modal({
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
-        className="w-full max-w-md bg-surface border border-border rounded-lg p-6 space-y-4"
+        className="w-full max-w-md bg-surface border border-border rounded-[22px] p-7 space-y-5 shadow-[0_25px_75px_rgb(0_0_0_/_35%)]"
       >
         {children}
       </div>

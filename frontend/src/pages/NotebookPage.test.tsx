@@ -200,7 +200,7 @@ describe("NotebookPage", () => {
     );
   });
 
-  it("the detach and add buttons reveal on keyboard focus, not just hover (WCAG 2.1.1)", async () => {
+  it("keeps the detach and add buttons visible on touch and keyboard", async () => {
     vi.mocked(notebooksApi.get).mockResolvedValue(makeNotebook());
     vi.mocked(notebooksApi.listDocuments).mockResolvedValue([
       makeDoc({ id: "doc-1", title: "report.pdf" }),
@@ -218,8 +218,7 @@ describe("NotebookPage", () => {
     const detachButton = screen.getByLabelText("Remove report.pdf from notebook");
     const addButton = screen.getByLabelText("Add other.pdf to notebook");
     for (const button of [detachButton, addButton]) {
-      expect(button.className).toMatch(/group-focus-within:opacity-100/);
-      expect(button.className).toMatch(/focus-visible:opacity-100/);
+      expect(button.className).not.toMatch(/opacity-0/);
     }
   });
 

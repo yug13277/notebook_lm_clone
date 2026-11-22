@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notebooksApi } from "../services/notebooksService";
 import { useDialog } from "../hooks/useDialog";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError } from "../types/auth";
 import type { Notebook } from "../types/knowledge";
+import { ArrowUpRight, BookOpen, Edit2, Plus, Trash2 } from "react-feather";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card } from "../components/ui/card";
 import { RenameDialog } from "../components/RenameDialog";
 
 export function NotebookList() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dialog = useDialog();
   const { user } = useAuth();
@@ -68,21 +71,23 @@ export function NotebookList() {
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <main className="p-6 max-w-2xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-lg font-semibold">Notebooks</h1>
-          <button
+      <main className="page-enter p-6 sm:p-10 max-w-6xl mx-auto w-full">
+        <div className="flex items-start justify-between gap-4 mb-9">
+          <div><h1 className="text-3xl font-semibold tracking-tight">Notebooks</h1>
+          <p className="mt-2 text-sm text-muted">Keep documents and conversations together.</p></div>
+          <Button
             type="button"
             onClick={() => setCreating(true)}
-            className="text-sm bg-accent text-white rounded-md px-3 py-1.5 hover:opacity-90"
+            size="sm"
+            className="button-press shrink-0 text-sm font-medium"
           >
-            New notebook
-          </button>
+            <Plus size={15} aria-hidden="true" /> New notebook
+          </Button>
         </div>
 
         {creating && (
-          <div className="mb-4 flex gap-2">
-            <input
+          <div className="mb-6 flex flex-wrap gap-2 rounded-[18px] border border-border bg-surface p-4">
+            <Input
               autoFocus
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -96,7 +101,7 @@ export function NotebookList() {
             <button
               type="button"
               onClick={handleCreate}
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || !newName.trim()}
               className="text-sm bg-accent text-white rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-50"
             >
               Create
@@ -117,58 +122,37 @@ export function NotebookList() {
         )}
 
         {notebooksQuery.data && notebooksQuery.data.length === 0 && !creating && (
-          <p className="text-muted text-sm">
-            No notebooks yet. Create one to start asking questions about your documents.
-          </p>
+          <Card className="border border-border p-10 text-center shadow-none bg-surface">
+            <span className="w-12 h-12 rounded-[16px] bg-accent-soft text-accent flex items-center justify-center mx-auto mb-5"><BookOpen size={22} aria-hidden="true" /></span>
+            <p className="text-muted text-sm max-w-sm mx-auto">
+              No notebooks yet. Create one to start asking questions about your documents.
+            </p>
+          </Card>
         )}
 
         {notebooksQuery.data && notebooksQuery.data.length > 0 && (
-          <div className="space-y-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {notebooksQuery.data.map((nb) => {
               const isOwner = !!user && nb.created_by === user.id;
               return (
-                <div
-                  key={nb.id}
-                  onClick={() => navigate(`/app/notebooks/${nb.id}`)}
-                  className="group flex items-center gap-3 bg-surface border border-border rounded-lg px-4 py-3 cursor-pointer hover:border-accent transition"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">{nb.name}</p>
-                      {!isOwner && (
-                        <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted border border-border rounded px-1.5 py-0.5">
-                          Shared
-                        </span>
-                      )}
+                <Card key={nb.id} className="surface-lift flex flex-col min-h-48 border border-border bg-surface shadow-none overflow-hidden">
+                  <Link to={`/app/notebooks/${nb.id}`} className="flex-1 flex flex-col p-5 focus-visible:outline-offset-[-3px]">
+                    <span className="w-10 h-10 rounded-[13px] bg-accent-soft text-accent flex items-center justify-center"><BookOpen size={19} aria-hidden="true" /></span>
+                    <div className="mt-auto pt-7 min-w-0 flex items-end justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2"><h2 className="text-base font-semibold truncate">{nb.name}</h2>
+                          {!isOwner && <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted border border-border rounded px-1.5 py-0.5">Shared</span>}
+                        </div>
+                        {nb.description && <p className="text-xs text-muted truncate mt-1">{nb.description}</p>}
+                      </div>
+                      <ArrowUpRight size={17} className="text-accent shrink-0" aria-hidden="true" />
                     </div>
-                    {nb.description && (
-                      <p className="text-xs text-muted truncate mt-0.5">{nb.description}</p>
-                    )}
-                  </div>
-                  {isOwner && (
-                    <button
-                      type="button"
-                      aria-label={`Rename ${nb.name}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRenaming(nb);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 text-xs text-muted hover:text-text transition p-1 rounded"
-                    >
-                      Rename
-                    </button>
-                  )}
-                  {isOwner && (
-                    <button
-                      type="button"
-                      aria-label={`Delete ${nb.name}`}
-                      onClick={(e) => void handleDelete(e, nb.id, nb.name)}
-                      className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 text-muted hover:text-danger transition p-1 rounded"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
+                  </Link>
+                  {isOwner && <div className="flex items-center gap-1 border-t border-border px-3 py-2">
+                    <button type="button" aria-label={`Rename ${nb.name}`} onClick={() => setRenaming(nb)} className="button-press inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-muted hover:bg-elevated hover:text-text"><Edit2 size={13} aria-hidden="true" /> Rename</button>
+                    <button type="button" aria-label={`Delete ${nb.name}`} onClick={(e) => void handleDelete(e, nb.id, nb.name)} className="button-press ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-muted hover:bg-elevated hover:text-danger"><Trash2 size={13} aria-hidden="true" /> Delete</button>
+                  </div>}
+                </Card>
               );
             })}
           </div>

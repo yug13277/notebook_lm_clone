@@ -28,6 +28,17 @@ services:
       timeout: 3s
       retries: 10
 
+  # Private local metasearch for Ask Web. Only the laptop can reach this port.
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    ports:
+      - "127.0.0.1:8888:8080"
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      SEARXNG_BASE_URL: http://localhost:8888/
+    restart: unless-stopped
+
   # Local real-mode reranker (V2, `RealReranker` seam). ONLY needed when running the
   # backend with RERANKER_MODE=real locally — has no effect on CI/offline tests, which
   # stay on RERANKER_ENABLED=False by default and never call this. Point

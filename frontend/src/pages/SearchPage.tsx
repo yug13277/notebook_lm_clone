@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Search as SearchIcon } from "react-feather";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { notebooksApi } from "../services/notebooksService";
 import { documentsApi } from "../services/documentsService";
@@ -40,27 +41,27 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 const MODES: { id: SearchMode; label: string; placeholder: string; hint: string }[] = [
   {
     id: "semantic",
-    label: "Semantic (hybrid)",
+    label: "Semantic",
     placeholder: "Search this notebook's documents…",
-    hint: "Dense embedding kNN (fused with the lexical channel when hybrid search is on).",
+    hint: "Finds related ideas, even when the wording is different.",
   },
   {
     id: "ranked",
-    label: "Ranked (tf-idf / BM25)",
+    label: "Keyword",
     placeholder: "e.g. octet rule",
-    hint: "Free-text ranked retrieval over the from-scratch positional zone index — term-at-a-time scoring, top-K via a heap.",
+    hint: "Ranks passages by keyword relevance.",
   },
   {
     id: "boolean",
     label: "Boolean",
     placeholder: "e.g. octet AND rule NOT ionic",
-    hint: "Uppercase AND / OR / NOT (adjacent words are ANDed). Postings are merged in increasing-df order.",
+    hint: "Combine terms with AND, OR and NOT.",
   },
   {
     id: "phrase",
-    label: "Phrase",
+    label: "Exact phrase",
     placeholder: 'e.g. "hydrogen bond"',
-    hint: "Exact phrase via the positional index: intersect postings, then verify consecutive positions.",
+    hint: "Find the exact sequence of words.",
   },
 ];
 
@@ -197,8 +198,8 @@ export function SearchPage() {
   return (
     <div className="flex flex-1 min-h-0">
       <div className="flex flex-col flex-1 min-h-0 min-w-0">
-        <div className="shrink-0 border-b border-border p-4 space-y-3">
-          <h1 className="text-sm font-semibold">Search</h1>
+        <div className="shrink-0 border-b border-border px-6 sm:px-10 py-7 space-y-5 bg-panel">
+          <h1 className="text-2xl font-semibold tracking-tight">Search</h1>
 
           {!notebooksQuery.isLoading && !hasNotebooks ? (
             <p className="text-sm text-muted">
@@ -212,7 +213,7 @@ export function SearchPage() {
               <div
                 role="tablist"
                 aria-label="Retrieval model"
-                className="grid grid-cols-2 sm:flex sm:gap-1 border-b border-border -mx-4 px-4"
+                className="grid grid-cols-2 sm:flex gap-1 p-1 bg-elevated rounded-xl w-full sm:w-fit max-w-full"
               >
                 {MODES.map((m) => (
                   <button
@@ -221,10 +222,10 @@ export function SearchPage() {
                     role="tab"
                     aria-selected={mode === m.id}
                     onClick={() => switchMode(m.id)}
-                    className={`whitespace-nowrap text-center text-xs px-3 py-2 -mb-px border-b-2 transition ${
+                    className={`text-center text-xs font-medium px-4 py-2 rounded-lg transition-colors ${
                       mode === m.id
-                        ? "border-accent text-text"
-                        : "border-transparent text-muted hover:text-text"
+                        ? "bg-surface text-accent shadow-sm"
+                        : "text-muted hover:text-text"
                     }`}
                   >
                     {m.label}
@@ -281,13 +282,15 @@ export function SearchPage() {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-6 bg-panel">
           {isSemantic && (
             <>
               {!hasSearched && hasNotebooks && (
-                <p className="text-muted text-sm text-center mt-8">
-                  Pick a notebook and enter a query to search its documents.
-                </p>
+                <div className="mx-auto flex max-w-sm flex-col items-center py-16 text-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[16px] border border-border bg-surface text-muted mb-5"><SearchIcon size={21} strokeWidth={1.6} aria-hidden="true" /></span>
+                  <h2 className="text-base font-semibold tracking-tight">Search your sources</h2>
+                  <p className="mt-2 text-muted text-sm">Pick a notebook and enter a query to search its documents.</p>
+                </div>
               )}
 
               {hasSearched && results.length === 0 && (
@@ -311,7 +314,7 @@ export function SearchPage() {
                         type="button"
                         onClick={() => openCitation(hit)}
                         aria-label={`Open source #${hit.index}`}
-                        className="w-full text-left bg-surface border border-border rounded-md p-3 space-y-1 hover:border-accent transition"
+                        className="w-full text-left bg-surface border border-border rounded-[18px] p-5 space-y-2 hover:border-accent hover:shadow-[0_10px_26px_rgb(45_55_80_/_7%)] transition-all"
                       >
                         <div className="flex items-center gap-2 text-xs">
                           <span className="font-mono text-muted">#{hit.index}</span>

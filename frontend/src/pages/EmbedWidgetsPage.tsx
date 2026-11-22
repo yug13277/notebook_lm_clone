@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Code } from "react-feather";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { embedApi } from "../services/embedService";
 import { notebooksApi } from "../services/notebooksService";
@@ -122,19 +123,19 @@ export function EmbedWidgetsPage() {
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <main className="p-6 max-w-3xl mx-auto w-full">
-        <div className="mb-4">
-          <h1 className="text-lg font-semibold">Embed widgets</h1>
-          <p className="text-muted text-sm">
-            Create a paste-able chat widget for one notebook. Visitors on your website chat
-            anonymously with that notebook — grounded and cited, same as inside the app.
+      <main className="page-enter p-6 sm:p-10 max-w-5xl mx-auto w-full">
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight">Embed widgets</h1>
+          <p className="text-muted text-sm mt-2 max-w-2xl">
+            Create a chat widget for a notebook and add it to your website.
           </p>
         </div>
 
         <form
           onSubmit={handleCreate}
-          className="bg-surface border border-border rounded-lg p-4 mb-6 space-y-3"
+          className="bg-surface border border-border rounded-[18px] p-5 sm:p-6 mb-7 space-y-5"
         >
+          <div className="flex items-center gap-2.5"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><Code size={17} aria-hidden="true" /></span><div><h2 className="text-sm font-semibold">New widget</h2><p className="text-xs text-muted">Connect a notebook to your site.</p></div></div>
           <div className="flex flex-wrap gap-3">
             <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
               <label htmlFor="widget-name" className="text-xs text-muted">
@@ -145,7 +146,7 @@ export function EmbedWidgetsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Support bot"
-                className="bg-bg border border-border rounded-md px-2 py-1.5 text-sm"
+                className="bg-bg border border-border rounded-md px-3 py-2 text-sm"
               />
             </div>
             <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
@@ -156,7 +157,7 @@ export function EmbedWidgetsPage() {
                 id="widget-notebook"
                 value={notebookId}
                 onChange={(e) => setNotebookId(e.target.value)}
-                className="bg-bg border border-border rounded-md px-2 py-1.5 text-sm"
+                className="bg-bg border border-border rounded-md px-3 py-2 text-sm"
               >
                 <option value="">Select a notebook…</option>
                 {notebooks.map((nb) => (
@@ -178,18 +179,17 @@ export function EmbedWidgetsPage() {
               onChange={(e) => setOriginsText(e.target.value)}
               rows={3}
               placeholder="https://example.com"
-              className="bg-bg border border-border rounded-md px-2 py-1.5 text-sm font-mono"
+              className="bg-bg border border-border rounded-md px-3 py-2 text-sm font-mono"
             />
             <p className="text-xs text-muted">
-              e.g. https://example.com — leave empty to allow ANY site (not recommended for
-              production).
+              Leave empty to allow the widget on any site. Add domains to restrict where it runs.
             </p>
           </div>
 
           <button
             type="submit"
             disabled={createMutation.isPending || !name.trim() || !notebookId}
-            className="text-sm bg-accent text-white rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-50"
+            className="button-press text-sm bg-accent text-white rounded-full px-5 py-2.5 hover:brightness-110 disabled:opacity-50"
           >
             Create widget
           </button>
@@ -198,7 +198,7 @@ export function EmbedWidgetsPage() {
         {widgetsQuery.isLoading && <p className="text-muted text-sm">Loading…</p>}
         {widgetsQuery.isError && <p className="text-danger text-sm">Failed to load widgets.</p>}
         {widgetsQuery.data && widgets.length === 0 && (
-          <p className="text-muted text-sm">No widgets yet. Create one above.</p>
+          <div className="rounded-[18px] border border-dashed border-border px-6 py-10 text-center"><Code size={20} className="mx-auto text-muted mb-3" aria-hidden="true" /><p className="text-muted text-sm">No widgets yet. Create one above.</p></div>
         )}
 
         <div className="space-y-4">

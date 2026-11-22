@@ -6,8 +6,8 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, Form, UploadFile, status
-from fastapi.responses import JSONResponse
+from fastapi import Depends, Form, HTTPException, UploadFile, status
+from fastapi.responses import JSONResponse, Response
 
 from app.middleware.context import TenantContext
 from app.middleware.deps import get_ctx, require_admin
@@ -25,6 +25,7 @@ from app.services.documents import documents_service
 from app.services.documents.folders import DeleteMode
 from app.services.ingestion import ingestion_service
 from app.services.queue import JobQueue, get_job_queue
+from app.services.retrieval.permissions import resolve_allowed_documents
 from app.services.storage import ObjectStore, get_object_store
 
 
@@ -128,6 +129,31 @@ async def delete_document(
     object_store: Annotated[ObjectStore, Depends(get_object_store)],
 ) -> None:
     await documents_service.delete_document(ctx, document_id, object_store=object_store)
+
+
+async def get_document_file(
+    document_id: uuid.UUID,
+    ctx: Annotated[TenantContext, Depends(get_ctx)],
+    object_store: Annotated[ObjectStore, Depends(get_object_store)],
+) -> Response:
+    if document_id not in await resolve_allowed_documents(ctx):
+        raise HTTPException(status_code=404, detail="Document not found")
+    document = await documents_service.get_document(ctx, document_id)
+    if not document.storage_key or document.mime_type != "application/pdf":
+        raise HTTPException(status_code=404, detail="PDF not available")
+    try:
+        data = await object_store.get(document.storage_key)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="PDF not available") from exc
+    return Response(
+        data,
+        media_type="application/pdf",
+        headers={
+            "Cache-Control": "private, no-store",
+            "Content-Disposition": "inline",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 async def move_document(

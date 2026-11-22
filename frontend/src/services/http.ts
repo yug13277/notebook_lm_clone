@@ -179,3 +179,24 @@ export async function apiFetch<T>(
 ): Promise<T> {
   return (await apiFetchWithStatus<T>(path, init, token)).data;
 }
+
+/** Binary document fetch with the same refresh behavior as JSON requests. */
+export async function apiFetchBlob(path: string): Promise<Blob> {
+  let access = getStoredAccessToken();
+  let res = await send(path, {}, access);
+  if (res.status === 401 && access && isRecoverablePath(path)) {
+    access = await refreshAccessToken();
+    if (access) {
+      setStoredAccessToken(access);
+      res = await send(path, {}, access);
+    } else {
+      setStoredAccessToken(null);
+      sessionExpiredHandler();
+    }
+  }
+  if (!res.ok) {
+    const body = await parseJson(res);
+    throw new ApiError(res.status, extractErrorDetail(body, res.statusText), body);
+  }
+  return res.blob();
+}

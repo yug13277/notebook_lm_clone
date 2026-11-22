@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Shield, Tag } from "react-feather";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { accessRolesApi } from "../services/accessRolesService";
 import { authApi } from "../services/authService";
@@ -88,39 +89,40 @@ export function AccessRolesPage() {
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <main className="p-6 max-w-3xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-4">
+      <main className="page-enter p-6 sm:p-10 max-w-5xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-lg font-semibold">Access Roles</h1>
-            <p className="text-muted text-sm">
-              Grant a role tags, then assign it to members — anyone holding the role can
-              see folders/documents carrying those tags.
+            <h1 className="text-3xl font-semibold tracking-tight">Access Roles</h1>
+            <p className="text-muted text-sm mt-2 max-w-2xl">
+              Control which members can see documents and folders by assigning role tags.
             </p>
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <section className="rounded-[18px] border border-border bg-surface p-5 sm:p-6 mb-5" aria-label="Create an access role">
+        <div className="flex items-center gap-2.5 mb-4"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><Shield size={17} aria-hidden="true" /></span><div><h2 className="text-sm font-semibold">Create a role</h2><p className="text-xs text-muted">Give a set of members access to selected tags.</p></div></div>
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={newRoleName}
             placeholder="New Access Role name (e.g. Finance Team)"
             onChange={(e) => setNewRoleName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateRole()}
-            className="flex-1 bg-bg border border-border rounded-md px-3 py-1.5 text-sm"
+            className="flex-1 bg-bg border border-border rounded-md px-3 py-2 text-sm"
           />
           <button
             type="button"
             onClick={handleCreateRole}
-            disabled={createRoleMutation.isPending}
-            className="text-sm bg-accent text-white rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-50"
+            disabled={createRoleMutation.isPending || !newRoleName.trim()}
+            className="button-press text-sm bg-accent text-white rounded-xl px-5 py-2 hover:brightness-110 disabled:opacity-50"
           >
             Create
           </button>
         </div>
+        </section>
 
-        <div className="mb-6">
-          <p className="text-xs text-muted mb-1">
-            Tags (organize documents/folders — grant one to a role below to control access)
-          </p>
+        <section className="rounded-[18px] border border-border bg-surface p-5 sm:p-6 mb-8" aria-label="Document tags">
+          <div className="flex items-center gap-2 mb-4"><Tag size={16} className="text-muted" aria-hidden="true" /><h2 className="text-sm font-semibold">Document tags</h2></div>
+          <p className="text-xs text-muted mb-3">Create a tag, then grant it to a role to control access.</p>
           <div className="flex flex-wrap gap-1.5 items-center">
             {tagsQuery.data?.map((t) => (
               <span
@@ -138,14 +140,15 @@ export function AccessRolesPage() {
               className="bg-bg border border-border rounded-sm px-2 py-0.5 text-xs w-24"
             />
           </div>
-        </div>
+        </section>
 
         {rolesQuery.isLoading && <p className="text-muted text-sm">Loading…</p>}
         {rolesQuery.isError && <p className="text-danger text-sm">Failed to load Access Roles.</p>}
         {rolesQuery.data && rolesQuery.data.length === 0 && (
-          <p className="text-muted text-sm">
-            No Access Roles yet. Create one above to start granting tag-based access.
-          </p>
+          <div className="rounded-[18px] border border-dashed border-border px-6 py-10 text-center">
+            <Shield size={20} className="mx-auto text-muted mb-3" aria-hidden="true" />
+            <p className="text-muted text-sm">No Access Roles yet. Create one above to start granting tag-based access.</p>
+          </div>
         )}
 
         <div className="space-y-4">

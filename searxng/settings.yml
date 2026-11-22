@@ -1,0 +1,9 @@
+use_default_settings: true
+server:
+  secret_key: "local-veratas-search-only-change-before-deployment"
+  limiter: false
+  public_instance: false
+search:
+  formats:
+    - html
+    - json

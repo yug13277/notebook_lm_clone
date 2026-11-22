@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str | None = None
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     LLM_MODEL: str = "gpt-4o-mini"
+    # Server-side web search for the separate Ask Web view.
+    BRAVE_SEARCH_API_KEY: str | None = None
+    SEARXNG_URL: str = "http://127.0.0.1:8888"
     # Real Parser (F23) targets OpenRouter's file-parser plugin — a SEPARATE adapter/vendor
     # from the OpenAI-compatible Embedder/LLM above, even though both ultimately go through
     # an OpenRouter-compatible endpoint. PARSER_MODEL is incidental: the chat/completions
